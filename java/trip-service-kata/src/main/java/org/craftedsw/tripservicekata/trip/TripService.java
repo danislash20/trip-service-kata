@@ -9,24 +9,30 @@ import org.craftedsw.tripservicekata.user.UserSession;
 
 public class TripService {
 
-	public List<Trip> getTripsByUser(User user) throws UserNotLoggedInException {
-		List<Trip> tripList = new ArrayList<Trip>();
-		User loggedUser = UserSession.getInstance().getLoggedUser();
-		boolean isFriend = false;
-		if (loggedUser != null) {
-			for (User friend : user.getFriends()) {
-				if (friend.equals(loggedUser)) {
-					isFriend = true;
-					break;
-				}
-			}
-			if (isFriend) {
-				tripList = TripDAO.findTripsByUser(user);
-			}
-			return tripList;
-		} else {
+    public static final ArrayList<Trip> NO_TRIPS = new ArrayList<>();
+
+    public List<Trip> getTripsByUser(User user) throws UserNotLoggedInException {
+		checkIfTheUserIsLoggedIn(getLoggedInUser());
+		return getTripsByUser(user, getLoggedInUser());
+
+	}
+
+	protected List<Trip> getTripsByUser(User user, User loggedUser) {
+		return user.friendsOf(loggedUser) ? tripsOfUser(user) : NO_TRIPS;
+	}
+
+	protected void checkIfTheUserIsLoggedIn(User loggedUser) {
+		if (loggedUser == null) {
 			throw new UserNotLoggedInException();
 		}
 	}
-	
+
+	protected List<Trip> tripsOfUser(User user) {
+        return TripDAO.findTripsByUser(user);
+    }
+
+    protected User getLoggedInUser() {
+        return UserSession.getInstance().getLoggedUser();
+    }
+
 }
